@@ -32,10 +32,12 @@
               <div class="pilwrap">
                 <a class="pilcrow" href="#section-2">&#182;</a>
               </div>
-              <p>Chrappify a package to be a packaged Chrome App, or Chrapp as they say in the
-parlance of our times.</p>
+              <p>Chrappify a package to be a packaged Chrome App, or Chrapp (pronounced kræp).</p>
 <p>To do this we take a package and process it into a Chrome App package.</p>
+<p>Much of this code is lifted from <a href="http://github.com/STRd6/packager">http://github.com/STRd6/packager</a></p>
 <p>We convert all the &quot;files&quot; into functions that can be executed instead of eval&#39;d.</p>
+<p>We need to do this so our <code>require</code> will continue to work in the Chrome app
+security sandbox.</p>
 
             </div>
             <div class="content"><pre><code class="lang-coffeescript"><span class="function"><span class="title">convertFile</span></span> = (file) -&gt;
@@ -103,33 +105,21 @@ parlance of our times.</p>
 
   JSON.stringify(data)
 
-<span class="function"><span class="title">stringify</span></span> = (data) -&gt;
-  <span class="keyword">if</span> stringifier = stringifiers[<span class="keyword">typeof</span> data]
-    stringifier(data)
-  <span class="keyword">else</span>
-    JSON.stringify(data)
+stringifier = require(<span class="string">"./stringifier"</span>)</code></pre>
+</div>
+        </li>
+        
+        
+        <li id="section-5">
+            <div class="annotation">
+              <div class="pilwrap">
+                <a class="pilcrow" href="#section-5">&#182;</a>
+              </div>
+              <p>Wrap code in a closure that provides the package and a require function. This
+can be used for generating standalone HTML pages, scripts, and tests.</p>
 
-stringifiers =
-  <span class="literal">undefined</span>: -&gt;
-    <span class="string">"undefined"</span>
-  string: (string) -&gt;
-    <span class="comment"># One weird trick to psuedo-stringify but keep special functions as functions</span>
-    <span class="keyword">if</span> string.match <span class="regexp">/^function\(require, global, module, exports, PACKAGE\)/</span>
-      string
-    <span class="keyword">else</span>
-      JSON.stringify(string)
-  object: (obj) -&gt;
-    <span class="keyword">if</span> obj
-      string = Object.keys(pkg).map (key) -&gt;
-        value = obj[key]
-        <span class="string">"<span class="subst">#{stringify(key)}</span>:<span class="subst">#{stringify(value)}</span>"</span>
-      .join <span class="string">","</span>
-
-      <span class="string">"{<span class="subst">#{string}</span>}"</span>
-    <span class="keyword">else</span>
-      <span class="string">"null"</span>
-
-<span class="function"><span class="title">packageWrapper</span></span> = (pkg) -&gt;
+            </div>
+            <div class="content"><pre><code class="lang-coffeescript"><span class="function"><span class="title">packageWrapper</span></span> = (pkg, code) -&gt;
   <span class="string">"""
     ;(function(PACKAGE) {
     var oldRequire = window.Require;
@@ -137,7 +127,7 @@ stringifiers =
     var require = Require.generateFor(PACKAGE);
     window.Require = oldRequire;
     <span class="subst">#{code}</span>
-    })(<span class="subst">#{stringify(convertPackage(pkg))}</span>);
+    })(<span class="subst">#{stringifier(convertPackage(pkg))}</span>);
   """</span>
 
 <span class="function"><span class="title">html</span></span> = (pkg) -&gt;
@@ -153,9 +143,66 @@ stringifiers =
     &lt;\/script&gt;
     &lt;/body&gt;
     &lt;/html&gt;
-  """</span>
+  """</span></code></pre>
+</div>
+        </li>
+        
+        
+        <li id="section-6">
+            <div class="annotation">
+              <div class="pilwrap">
+                <a class="pilcrow" href="#section-6">&#182;</a>
+              </div>
+              <p>Load the config from our app package.</p>
 
-module.exports =
+            </div>
+            <div class="content"><pre><code class="lang-coffeescript"><span class="function"><span class="title">loadAppConfig</span></span> = (pkg) -&gt;
+  module = {}
+  Function(<span class="string">"module"</span>, pkg.distribution.pixie.content)(module)
+  <span class="keyword">return</span> module.exports</code></pre>
+</div>
+        </li>
+        
+        
+        <li id="section-7">
+            <div class="annotation">
+              <div class="pilwrap">
+                <a class="pilcrow" href="#section-7">&#182;</a>
+              </div>
+              <p><code>makeScript</code> returns a string representation of a script tag that has a src
+attribute.</p>
+
+            </div>
+            <div class="content"><pre><code class="lang-coffeescript"><span class="function"><span class="title">makeScript</span></span> = (src) -&gt;
+  <span class="string">"&lt;script src=<span class="subst">#{JSON.stringify(src)}</span>&gt;&lt;\/script&gt;"</span></code></pre>
+</div>
+        </li>
+        
+        
+        <li id="section-8">
+            <div class="annotation">
+              <div class="pilwrap">
+                <a class="pilcrow" href="#section-8">&#182;</a>
+              </div>
+              <p><code>dependencyScripts</code> returns a string containing the script tags that are
+the remote script dependencies of this build.</p>
+
+            </div>
+            <div class="content"><pre><code class="lang-coffeescript"><span class="function"><span class="title">dependencyScripts</span></span> = (remoteDependencies=[]) -&gt;
+  remoteDependencies.map(makeScript).join(<span class="string">"\n"</span>)</code></pre>
+</div>
+        </li>
+        
+        
+        <li id="section-9">
+            <div class="annotation">
+              <div class="pilwrap">
+                <a class="pilcrow" href="#section-9">&#182;</a>
+              </div>
+              <p>Export our Chrapp processor.</p>
+
+            </div>
+            <div class="content"><pre><code class="lang-coffeescript">module.exports =
   processPackage: (pkg) -&gt;
     files = []
 
@@ -166,7 +213,11 @@ module.exports =
         path: path
         type: <span class="string">"blob"</span>
 
-    processedPackage = convertPackage(pkg)</code></pre>
+    add <span class="string">"background.js"</span>, generateBackgroundPage(pkg)
+    add <span class="string">"window.html"</span>, html(pkg)
+    add <span class="string">"manifest.json"</span>, generateManifest loadAppConfig(pkg)
+
+    <span class="keyword">return</span> files</code></pre>
 </div>
         </li>
         
