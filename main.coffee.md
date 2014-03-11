@@ -1,12 +1,16 @@
 Chrapps
 =======
 
-Chrappify a package to be a packaged Chrome App, or Chrapp as they say in the
-parlance of our times.
+Chrappify a package to be a packaged Chrome App, or Chrapp (pronounced kræp).
 
 To do this we take a package and process it into a Chrome App package.
 
+Much of this code is lifted from http://github.com/STRd6/packager
+
 We convert all the "files" into functions that can be executed instead of eval'd.
+
+We need to do this so our `require` will continue to work in the Chrome app
+security sandbox.
 
     convertFile = (file) ->
       """
@@ -56,33 +60,12 @@ Generate `manifest.json`
 
       JSON.stringify(data)
 
-    stringify = (data) ->
-      if stringifier = stringifiers[typeof data]
-        stringifier(data)
-      else
-        JSON.stringify(data)
+    stringifier = require("./stringifier")
 
-    stringifiers =
-      undefined: ->
-        "undefined"
-      string: (string) ->
-        # One weird trick to psuedo-stringify but keep special functions as functions
-        if string.match /^function\(require, global, module, exports, PACKAGE\)/
-          string
-        else
-          JSON.stringify(string)
-      object: (obj) ->
-        if obj
-          string = Object.keys(pkg).map (key) ->
-            value = obj[key]
-            "#{stringify(key)}:#{stringify(value)}"
-          .join ","
-  
-          "{#{string}}"
-        else
-          "null"
+Wrap code in a closure that provides the package and a require function. This
+can be used for generating standalone HTML pages, scripts, and tests.
 
-    packageWrapper = (pkg) ->
+    packageWrapper = (pkg, code) ->
       """
         ;(function(PACKAGE) {
         var oldRequire = window.Require;
@@ -90,7 +73,7 @@ Generate `manifest.json`
         var require = Require.generateFor(PACKAGE);
         window.Require = oldRequire;
         #{code}
-        })(#{stringify(convertPackage(pkg))});
+        })(#{stringifier(convertPackage(pkg))});
       """
 
     html = (pkg) ->
@@ -108,6 +91,27 @@ Generate `manifest.json`
         </html>
       """
 
+Load the config from our app package.
+
+    loadAppConfig = (pkg) ->
+      module = {}
+      Function("module", pkg.distribution.pixie.content)(module)
+      return module.exports
+
+`makeScript` returns a string representation of a script tag that has a src
+attribute.
+
+    makeScript = (src) ->
+      "<script src=#{JSON.stringify(src)}><\/script>"
+
+`dependencyScripts` returns a string containing the script tags that are
+the remote script dependencies of this build.
+
+    dependencyScripts = (remoteDependencies=[]) ->
+      remoteDependencies.map(makeScript).join("\n")
+
+Export our Chrapp processor.
+
     module.exports =
       processPackage: (pkg) ->
         files = []
@@ -119,6 +123,8 @@ Generate `manifest.json`
             path: path
             type: "blob"
 
-        processedPackage = convertPackage(pkg)
-        
-        
+        add "background.js", generateBackgroundPage(pkg)
+        add "window.html", html(pkg)
+        add "manifest.json", generateManifest loadAppConfig(pkg)
+
+        return files
