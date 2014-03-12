@@ -24,16 +24,17 @@ security sandbox.
     convertPackage = (pkg) ->
       {dependencies, distribution} = pkg
 
-      dependencies: 
-        Object.keys(dependencies).reduce (processed, key) ->
-          processed[key] = convertPackage(dependencies[key])
-          processed 
-        , {}
-      distribution: 
-        Object.keys(distribution).reduce (processed, key) ->
-          processed[key] = convertFile distribution[key]
-          processed
-        , {}
+      result = extend {}, pkg,
+        dependencies: 
+          Object.keys(dependencies).reduce (processed, key) ->
+            processed[key] = convertPackage(dependencies[key])
+            processed 
+          , {}
+        distribution: 
+          Object.keys(distribution).reduce (processed, key) ->
+            processed[key] = convertFile distribution[key]
+            processed
+          , {}
 
 We provide our own modified [`require`](./require) that works with that .
 
@@ -84,7 +85,7 @@ can be used for generating standalone HTML pages, scripts, and tests.
         #{dependencyScripts(pkg.remoteDependencies)}
         </head>
         <body>
-        <script src="/app.js"><\/script>
+        <script src="./app.js"><\/script>
         </body>
         </html>
       """
@@ -130,3 +131,12 @@ Export our Chrapp processor.
         add "manifest.json", generateManifest loadAppConfig(pkg)
 
         return files
+
+Extend helper
+
+    extend = (target, sources...) ->
+      for source in sources
+        for name of source
+          target[name] = source[name]
+  
+      return target
