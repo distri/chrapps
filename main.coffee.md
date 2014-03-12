@@ -84,12 +84,13 @@ can be used for generating standalone HTML pages, scripts, and tests.
         #{dependencyScripts(pkg.remoteDependencies)}
         </head>
         <body>
-        <script>
-        #{packageWrapper(pkg, "require('./#{pkg.entryPoint}')")}
-        <\/script>
+        <script src="/app.js"><\/script>
         </body>
         </html>
       """
+
+    appJS = (pkg) ->
+      packageWrapper(pkg, "require('./#{pkg.entryPoint}')")
 
 Load the config from our app package.
 
@@ -125,6 +126,7 @@ Export our Chrapp processor.
 
         add "background.js", generateBackgroundPage(pkg)
         add "window.html", html(pkg)
+        add "app.js", appJS(pkg)
         add "manifest.json", generateManifest loadAppConfig(pkg)
 
         return files
