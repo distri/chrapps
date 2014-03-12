@@ -138,12 +138,13 @@ can be used for generating standalone HTML pages, scripts, and tests.</p>
     <span class="subst">#{dependencyScripts(pkg.remoteDependencies)}</span>
     &lt;/head&gt;
     &lt;body&gt;
-    &lt;script&gt;
-    <span class="subst">#{packageWrapper(pkg, "require('./#{pkg.entryPoint}</span>')")}
-    &lt;\/script&gt;
+    &lt;script src="/app.js"&gt;&lt;\/script&gt;
     &lt;/body&gt;
     &lt;/html&gt;
-  """</span></code></pre>
+  """</span>
+
+<span class="function"><span class="title">appJS</span></span> = (pkg) -&gt;
+  packageWrapper(pkg, <span class="string">"require('./<span class="subst">#{pkg.entryPoint}</span>')"</span>)</code></pre>
 </div>
         </li>
         
@@ -215,6 +216,7 @@ the remote script dependencies of this build.</p>
 
     add <span class="string">"background.js"</span>, generateBackgroundPage(pkg)
     add <span class="string">"window.html"</span>, html(pkg)
+    add <span class="string">"app.js"</span>, appJS(pkg)
     add <span class="string">"manifest.json"</span>, generateManifest loadAppConfig(pkg)
 
     <span class="keyword">return</span> files</code></pre>
