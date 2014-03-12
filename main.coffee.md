@@ -125,9 +125,11 @@ Export our Chrapp processor.
             path: path
             type: "blob"
 
-        add "background.js", generateBackgroundPage(pkg)
+        # TODO: Add all external dependencies as libs
+
         add "window.html", html(pkg)
         add "app.js", appJS(pkg)
+        add "background.js", generateBackgroundPage loadAppConfig(pkg)
         add "manifest.json", generateManifest loadAppConfig(pkg)
 
         return files
