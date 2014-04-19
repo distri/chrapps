@@ -100,9 +100,10 @@ security sandbox.</p>
 
             </div>
             <div class="content"><pre><code class="lang-coffeescript"><span class="function"><span class="title">generateManifest</span></span> = (data) -&gt;
-  data.app ?=
-    background:
-      scripts: [<span class="string">"background.js"</span>]
+  <span class="keyword">unless</span> data.background
+    data.app ?=
+      background:
+        scripts: [<span class="string">"background.js"</span>]
 
   JSON.stringify(data)
 
