@@ -53,12 +53,12 @@ security sandbox.</p>
   {dependencies, distribution} = pkg
 
   result = extend {}, pkg,
-    dependencies: 
+    dependencies:
       Object.keys(dependencies).reduce (processed, key) -&gt;
         processed[key] = convertPackage(dependencies[key])
-        processed 
+        processed
       , {}
-    distribution: 
+    distribution:
       Object.keys(distribution).reduce (processed, key) -&gt;
         processed[key] = convertFile distribution[key]
         processed
@@ -100,7 +100,7 @@ security sandbox.</p>
 
             </div>
             <div class="content"><pre><code class="lang-coffeescript"><span class="function"><span class="title">generateManifest</span></span> = (data) -&gt;
-  data.app =
+  data.app ?=
     background:
       scripts: [<span class="string">"background.js"</span>]
 
@@ -368,23 +368,19 @@ the remote script dependencies of this build.</p>
     }, 0);
   };
 
-  Interactive.register("setup", function(params) {
-    params.code = CoffeeScript.compile(params.source);
-    return exec(params);
-  });
-
-  Interactive.register("setup-js", function(params) {
-    params.code = params.source;
-    return exec(params);
-  });
-
   $(function() {
-    return findInteractiveElements();
+    Interactive.register("setup", function(params) {
+      params.code = CoffeeScript.compile(params.source);
+      return exec(params);
+    });
+    return Interactive.register("setup-js", function(params) {
+      params.code = params.source;
+      return exec(params);
+    });
   });
 
 }).call(this);
 
-//# sourceURL=interactive.coffee
 </script><script src="package.js"></script>
 </body>
 </html>

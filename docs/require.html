@@ -32,7 +32,7 @@
               <div class="pilwrap">
                 <a class="pilcrow" href="#section-2">&#182;</a>
               </div>
-              <p>NOTE: This is a slightly modified version of <a href="http://github.com/STRd6/require">http://github.com/STRd6/require</a></p>
+              <p>NOTE: This is a slightly modified version of <a href="http://github.com/distri/require">http://github.com/distri/require</a></p>
 <p>A Node.js compatible require implementation for pure client side apps.</p>
 <p>Each file is a module. Modules are responsible for exporting an object. Unlike
 traditional client side JavaScript, Ruby, or other common languages the module
@@ -589,23 +589,19 @@ the cache doesn&#39;t end up being enumerated or serialized to json.</p>
     }, 0);
   };
 
-  Interactive.register("setup", function(params) {
-    params.code = CoffeeScript.compile(params.source);
-    return exec(params);
-  });
-
-  Interactive.register("setup-js", function(params) {
-    params.code = params.source;
-    return exec(params);
-  });
-
   $(function() {
-    return findInteractiveElements();
+    Interactive.register("setup", function(params) {
+      params.code = CoffeeScript.compile(params.source);
+      return exec(params);
+    });
+    return Interactive.register("setup-js", function(params) {
+      params.code = params.source;
+      return exec(params);
+    });
   });
 
 }).call(this);
 
-//# sourceURL=interactive.coffee
 </script><script src="package.js"></script>
 </body>
 </html>
