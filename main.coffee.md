@@ -55,9 +55,10 @@ We set up the `background.js` and anything else Chrapps need.
 Generate `manifest.json`
 
     generateManifest = (data) ->
-      data.app ?=
-        background:
-          scripts: ["background.js"]
+      unless data.background
+        data.app ?=
+          background:
+            scripts: ["background.js"]
 
       JSON.stringify(data)
 
