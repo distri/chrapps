@@ -1,7 +1,7 @@
 Require
 =======
 
-NOTE: This is a slightly modified version of http://github.com/STRd6/require
+NOTE: This is a slightly modified version of http://github.com/distri/require
 
 A Node.js compatible require implementation for pure client side apps.
 

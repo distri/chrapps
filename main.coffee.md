@@ -25,12 +25,12 @@ security sandbox.
       {dependencies, distribution} = pkg
 
       result = extend {}, pkg,
-        dependencies: 
+        dependencies:
           Object.keys(dependencies).reduce (processed, key) ->
             processed[key] = convertPackage(dependencies[key])
-            processed 
+            processed
           , {}
-        distribution: 
+        distribution:
           Object.keys(distribution).reduce (processed, key) ->
             processed[key] = convertFile distribution[key]
             processed
@@ -55,7 +55,7 @@ We set up the `background.js` and anything else Chrapps need.
 Generate `manifest.json`
 
     generateManifest = (data) ->
-      data.app =
+      data.app ?=
         background:
           scripts: ["background.js"]
 
@@ -140,5 +140,5 @@ Extend helper
       for source in sources
         for name of source
           target[name] = source[name]
-  
+
       return target

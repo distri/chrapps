@@ -19,5 +19,5 @@ describe "stringifier", ->
     console.log result
 
     fn = eval("(#{result})").fn
-    
+
     assert.equal typeof fn, "function"

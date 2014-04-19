@@ -24,7 +24,7 @@ A hacky stringifier that makes "almost" JSON.
             value = obj[key]
             "#{stringify(key)}:#{stringify(value)}"
           .join ","
-  
+
           "{#{string}}"
         else
           "null"
